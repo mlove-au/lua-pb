@@ -258,6 +258,31 @@ function defines.message(parent, name, ast)
 end
 defines.group = defines.message
 
+function defines.oneof(parent, name, ast)  
+  
+  local fieldRef = copy(ast.fieldRef)
+  local mt = {
+    is_oneof = true,
+    fieldRef = fieldRef
+	}
+  
+  local pub = setmetatable({
+    ['.type'] = ast['.type']
+	},{
+	__index = function(tab, key)
+    -- if key is the special tag value, then return this type's metatable.
+		if key == mt_tag then return mt end
+	end,
+	-- hide this metatable.
+	__metatable = false,
+	})
+
+  -- add our public interface to parent's public interface
+	parent[name] = pub
+
+	return pub
+end
+
 function defines.enum(parent, name, ast)
 	local pub = {}
 	local values = copy(ast.values)

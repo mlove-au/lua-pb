@@ -52,6 +52,26 @@ local function make_node(node_type, node)
 	node['.type'] = node_type
 	return node
 end
+-- creates a field node
+local CreateField = function(rule, ftype, name, tag, options)
+	local field = make_node('field', {
+		rule = rule,
+		ftype = ftype,
+		name = name,
+		tag = tag,
+		options = options,
+	})
+	-- process common options.
+	if options then
+		field.default = options.default
+		field.is_deprecated = options.deprecated
+		field.is_packed = options.packed
+		if field.is_packed then
+			assert(field.rule == 'repeated', "Only 'repeated' fields can be packed.")
+		end
+	end
+	return field
+end
 local function CapNode(ntype, ...)
 	local fields = {...}
 	local fcount = #fields
@@ -194,6 +214,23 @@ Group = function(rule, name, tag, body)
 	})
 	return group, field
 end,
+Oneof = function(name, ...)
+    local node, fields = make_node('oneof', {...}), {}
+    node.name = name
+    node.fieldRef = {}
+    -- create an optional field for each definition
+    for _, fieldData in pairs({...}) do
+    -- store field tag -> field name mapping in the fieldRef property
+        node.fieldRef[fieldData[3]] = fieldData[2]
+        local field = CreateField('optional', unpack(fieldData))
+        field.oneofRef = name
+        table.insert(fields, field)
+    end
+    return node, unpack(fields)
+end,
+OneofField = function(...)
+  return {...}
+end,
 Enum = function(name, ...)
 	local node = make_node('enum', {...})
 	local options
@@ -224,25 +261,7 @@ end,
 EnumField = function(...)
 	return {...}
 end,
-Field = function(rule, ftype, name, tag, options)
-	local field = make_node('field', {
-		rule = rule,
-		ftype = ftype,
-		name = name,
-		tag = tag,
-		options = options,
-	})
-	-- process common options.
-	if options then
-		field.default = options.default
-		field.is_deprecated = options.deprecated
-		field.is_packed = options.packed
-		if field.is_packed then
-			assert(field.rule == 'repeated', "Only 'repeated' fields can be packed.")
-		end
-	end
-	return field
-end,
+Field = CreateField,
 FieldOptions = function(...)
 	local options = {...}
 	for i=1,#options,2 do

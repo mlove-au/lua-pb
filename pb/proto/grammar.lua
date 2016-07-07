@@ -117,14 +117,18 @@ rpc = V'RPC' *S* eV'ID' *S* eV'(' *S* V'UserType' *S* V')' *S*
 
 Group = V'FieldRule' *S* V'GROUP' *S* eV'GroupName' *S* eV'=' *S* eV'IntLit' *S* eV'{' *
 	V'MessageBody' *S* eV'}',
+  
+Oneof = V'ONEOF' *S* eV'ID' *S* eV'{' * (S* V'OneofField')^1 *S* eV'}',
 
 Message = V'MESSAGE' *S* eV'ID' *S* eV'{' * V'MessageBody' *S* eV'}',
 
 MessageBody = (S* (V'Group' + V'Field' + V'Enum' + V'Message' + V'Extend' + V'Extensions'
-	+ V'Option' + V';'))^0,
+	+ V'Oneof' + V'Option' + V';'))^0,
 
+OneofField = V'Type' *S* eV'ID' *S* eV'=' *S* eV'IntLit' *S*
+  ( V'[' *S* V'FieldOptions' *S* eV']')^-1 *E,
 Field = V'FieldRule' *S* eV'Type' *S* eV'ID' *S* eV'=' *S* eV'IntLit' *S*
-	( V'[' *S* V'FieldOptions' *S* eV']')^-1 *E,
+  ( V'[' *S* V'FieldOptions' *S* eV']')^-1 *E,
 FieldOptions = listOf(V'OptionBody', S* V',' *S),
 FieldRule = (V'REQUIRED' + V'OPTIONAL' + V'REPEATED'),
 

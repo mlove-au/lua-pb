@@ -1,0 +1,20 @@
+package oneof.test;
+
+message Test1 {
+  required int32 id = 1;
+  optional uint32 foo = 2;
+  optional string bar = 3;
+  optional uint32 baz = 4;
+}
+
+/**
+ * Same as Test1, with the optional fields packed as oneof
+ */
+message Test2 {
+  required int32 id = 1;
+  oneof type {
+    uint32 foo = 2;
+    string bar = 3;
+    uint32 baz = 4;
+  }
+}

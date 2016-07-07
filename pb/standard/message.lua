@@ -34,6 +34,19 @@ string = true, bytes = true,
 fixed32 = true, sfixed32 = true, float = true,
 }
 
+-- extracts oneof types
+local function extract_oneofs(types)
+  local oneofs = {}
+  if types then
+    for _, v in pairs(types) do
+      if v[".type"] == 'oneof' then
+        oneofs[v.name] = v.fieldRef
+      end
+    end
+  end
+  return oneofs
+end
+
 local msg_tag = {}
 local function new_message(mt, data)
 	-- check if data is already a message of this type.
@@ -60,6 +73,7 @@ _M.new = new_message
 function _M.def(parent, name, ast)
 	local methods = {}
 	local fields = copy(ast.fields)
+    local oneofs = extract_oneofs(copy(ast.types))
 	local tags = {}
 
 	-- create Metatable for Message/Group.
@@ -76,11 +90,26 @@ function _M.def(parent, name, ast)
 	is_group = is_group,
 	fields = fields,
 	methods = methods,
+    oneofs = oneofs,
 	tags = tags,
 	extensions = copy(ast.extensions),
 	-- hid this metatable.
 	__metatable = false,
-	}
+}
+
+    -- if more then one of oneof's members has a non-nil value, nil out the values of all but the last of them
+    local function normalize_oneofs(msg)
+        for _, v in pairs(oneofs) do
+            local lastFieldWithValue = nil
+            for _, field in pairs(v) do
+                if msg[field] ~= nil then lastFieldWithValue = field end
+            end
+            -- setting the value again will reset values of the other oneof fields
+            if lastFieldWithValue then
+                msg[lastFieldWithValue] = msg[lastFieldWithValue]
+            end
+        end
+    end
 
 	function mt.__index(msg, name)
 		local data = rawget(msg, '.data') -- field data.
@@ -91,6 +120,16 @@ function _M.def(parent, name, ast)
 		-- check field for a default value.
 		local field = fields[name] -- field info.
 		if field then return field.default end
+    -- check oneofs - if found, then return the first non-null value from the underlying field set
+        local oneof = oneofs[name]
+        if oneof then
+          for _, v in pairs(oneof) do
+            if data[v] then
+              return data[v]
+            end
+          end
+          return nil
+        end
 		-- check methods
 		local method = methods[name]
 		if method then return method end
@@ -112,7 +151,13 @@ function _M.def(parent, name, ast)
 		local data = rawget(msg, '.data') -- field data.
 		-- get field info.
 		local field = fields[name]
-		if not field then error("Invalid field:" .. name) end
+		if not field then
+            -- if the field name references a oneof, trigger a "not supported" error
+            if oneofs[name] then
+                error("Can not set value for oneof " .. name .. ". Setting oneof values directly is not supported.")
+            end
+            error("Invalid field:" .. name)
+        end
 		if value then
 			-- check if field is a message/group
 			local new = field.new
@@ -120,6 +165,14 @@ function _M.def(parent, name, ast)
 				value = new(value)
 			end
 		end
+        -- if the field belongs to a oneof set, set the value of other fields in the set to nil
+        if field.oneofRef then
+          for _, v in pairs(oneofs[field.oneofRef]) do
+            if (v ~= name) then
+              data[v] = nil
+            end
+          end
+        end
 		data[name] = value
 	end
 	function mt.__tostring(msg)
@@ -190,6 +243,8 @@ function _M.def(parent, name, ast)
 			-- Merge message data into empty message.
 			local msg, off_err = self:Merge(data, format, off, len)
 			if not msg then return msg, off_err end
+            -- clear oneof fields
+            normalize_oneofs(msg)
 			-- validate message.
 			local init, errmsg = self:IsInitialized()
 			if not init then return init, errmsg end
@@ -212,7 +267,14 @@ function _M.def(parent, name, ast)
 	end
 		-- HasField()
 	function methods:HasField(name)
-		local data = rawget(self, '.data') -- field data.
+    local data = rawget(self, '.data') -- field data.
+        -- handle oneofs
+        if oneofs[name] then
+          for _, v in pairs(oneofs[name]) do
+            if data[v] then return true end
+          end
+          return false
+        end
 		return not not data[name]
 	end
 		-- Clear()

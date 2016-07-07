@@ -116,7 +116,7 @@ keywords = {
 -- message extensions
 "extensions", "to", "max",
 -- message groups
-"group",
+"group", "oneof",
 -- RPC
 "service",
 "rpc", "returns",
