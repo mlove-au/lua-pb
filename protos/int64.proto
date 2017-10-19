@@ -1,0 +1,18 @@
+
+package integer64;
+
+// Variable length integers can use zigzag encoding to reduce space used
+// to encode the value. From https://developers.google.com/protocol-buffers/docs/encoding
+
+//  If you use int32 or int64 as the type for a negative number, the resulting 
+//  varint is always ten bytes long – it is, effectively, treated like a very large 
+//  unsigned integer. If you use one of the signed types, the resulting varint
+//  uses ZigZag encoding, which is much more efficient. 
+
+message TestVariableInt64
+{
+    optional int64  standard_ = 1;
+    optional uint64 unsigned_ = 2;
+    optional sint64 signed_   = 3;
+}
+
