@@ -1,3 +1,4 @@
+require 'busted.runner'()
 
 local pb = require"pb"
 local utils = require"utils"
@@ -60,41 +61,42 @@ describe("Unsigned 64 bit integers", function()
     end)
 end)
 
+describe("Signed 64 bit integers", function()
 
---[[
-local function test_with_bit_32_set()
-    round_trip_serder(0x00000000FFFFFFFF)
-end
+    it ("should encode/decode 0x0", function()
+        round_trip_signed_serder(0x0)
+    end)
 
-local function test_with_additional_high_bits_set()
-    round_trip_serder(0x000D0001FFFFFFFF)
-end
+    it ("should encode/decode 0x1", function()
+        round_trip_signed_serder(0x1)
+    end)
 
-local function test_with_high_bits_set_without_bit32()
-    round_trip_serder(0x0BCD0000EFFFFFFF)
-end
+    it ("should encode/decode -0x1", function()
+        round_trip_signed_serder(-0x1)
+    end)
 
-local function test_with_real_timestamp()
-    -- GMT: Monday, November 13, 2017 6:50:43.648 AM
-    local ts_with_bit_32_set = 0x15FB424FC40
-    round_trip_serder(ts_with_bit_32_set)
-end
+    it ("should decode 0x7FFFFFFF (bit 32 not set)", function()
+        round_trip_signed_serder(0x7FFFFFFF)
+    end)
 
-local function test_with_negative_signed_64_bits()
-    round_trip_signed_serder(-1);
-    local x=  -100000000000000
-    local x=  -9000000000000000
-    print(tonumber(x))
-    round_trip_signed_serder(x);
- --   round_trip_signed_serder(-9223372036854775808)
-end
+    it ("should decode 0xFFFFFFFF (lower 32 bits set)", function()
+        round_trip_signed_serder(0xFFFFFFFF)
+    end)
 
+    it ("should decode 0xDEADFFFFFFFF (lower 32 bits set)", function()
+        round_trip_signed_serder(0xDEADFFFFFFFF)
+    end)
 
+    it ("Should decode -9223372036854775809 (max #negative lua int)", function()
+        round_trip_signed_serder(-9223372036854775808)
+    end)
 
-test_with_real_timestamp()
-test_with_high_bits_set_without_bit32()
-test_with_additional_high_bits_set()
-test_with_bit_32_set()
-test_with_negative_signed_64_bits()
+    it ("Should decode 0x0010000000000000 (max lua int)", function()
+        round_trip_signed_serder(0x0010000000000000)
+    end)
 
---]]
+    it ("Should decode a UTC timestamp encoded as a int64", function()
+        round_trip_signed_serder(0x15FB424FC40);
+    end)
+end)
+
