@@ -213,7 +213,7 @@ function _M.def(parent, name, ast)
 		-- HasField()
 	function methods:HasField(name)
 		local data = rawget(self, '.data') -- field data.
-		return not not data[name]
+		return data[name] ~= nil
 	end
 		-- Clear()
 	function methods:Clear()

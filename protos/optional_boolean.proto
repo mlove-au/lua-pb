@@ -1,0 +1,6 @@
+package test;
+
+message TestOptionalBool
+{
+    optional bool bool_ = 1;
+}
