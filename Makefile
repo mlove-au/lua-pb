@@ -9,8 +9,7 @@ INTEGRATION_TEST_RESULTS= tests/check_proto.result \
      tests/dump_tokens.result \
      tests/list_unknown.result \
 
-UNIT_TEST_RESULTS=tests/test_luajit_int64_encode_decode.result \
-     tests/test_big_numbers.result \
+UNIT_TEST_RESULTS= tests/test_big_numbers.result \
      tests/decode.result \
      tests/decode_raw.result \
      tests/raw_decode_encode.result \
