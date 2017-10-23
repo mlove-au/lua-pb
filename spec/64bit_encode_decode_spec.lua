@@ -71,9 +71,9 @@ describe("Signed 64 bit integers", function()
         round_trip_signed_serder(0x1)
     end)
 
-   -- it ("should encode/decode -0x1", function()
-   --    round_trip_signed_serder(-0x1)
-   -- end)
+    it ("should encode/decode -0x1", function()
+       round_trip_signed_serder(-0x1)
+    end)
 
     it ("should decode 0x7FFFFFFF (bit 32 not set)", function()
         round_trip_signed_serder(0x7FFFFFFF)
