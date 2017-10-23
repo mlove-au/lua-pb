@@ -2,5 +2,6 @@ package test;
 
 message TestOptionalBool
 {
-    optional bool bool_ = 1;
+    optional bool bool_optional = 1;
+    required bool bool_required = 2;
 }
