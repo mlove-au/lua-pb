@@ -1,0 +1,23 @@
+package integer64;
+
+
+message SignedVarint64
+{
+    // inefficent for negative numbers
+    optional int64      int64_      =   1;
+
+    // Fixed 8 byte
+    optional sfixed64   sfixed64_   =   2;
+
+    // efficent for negative numbers
+    optional sint64     sint64_     =   3;
+}
+
+message UnsignedVarint64
+{
+    optional uint64     uint64_  =   1;
+    optional fixed64    fixed64_    =   2;
+}
+
+
+
